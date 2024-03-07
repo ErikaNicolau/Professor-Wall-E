@@ -1,1 +1,164 @@
+#include <Servo.h>
+const int leftB = 11; //motor left - going backwards A1
+const int leftF = 10; // motor left - going forward A2
+const int rightB = 6; //motor right - going backwards B2
+const int rightF = 9; //motor right - going forward B1
+Servo servo;
+int pos=10;
+int catchobject =0;
+unsigned long startTime = 0;
+const int onblack= 1000;  // reading for black line from sensor is less than this
+const int onWhite= 600; // reading for white line is greater than this
 
+int IR1;
+int IR2;
+int IR3;
+int IR4;
+int IR5;
+int IR6;
+int IR7;
+int IR8;
+
+void grippercatch(){
+    for(pos=120;pos>=40;pos--){
+    servo.write(pos);
+    delay(20);
+    }
+}
+
+void gripperdrop(){
+    for(pos=40;pos<=120;pos++){
+    servo.write(pos);
+    delay(20);
+    }
+}
+
+void stop(){
+  digitalWrite(leftB, LOW);
+  digitalWrite(rightB, LOW);
+  digitalWrite(leftF, LOW);
+  digitalWrite(rightF, LOW);
+}
+
+void followLine(){
+  readSensors();
+  if( catchobject == 0)
+    {
+      grippercatch();
+      catchobject = 1;
+    }
+if(isOnBlack(IR7) && isOnBlack(IR8))
+{
+  analogWrite(leftF,225);
+  analogWrite(rightF,255);
+}
+else if(isOnBlack(IR2) && isOnBlack(IR3) && isOnWhite(IR6) && isOnWhite(IR7))
+  {
+    analogWrite(leftF,255);
+    analogWrite(rightF,255);
+  }
+  else if(isOnWhite(IR2) && isOnWhite(IR3) && isOnWhite(IR7) && isOnBlack(IR6))
+  {
+  analogWrite(leftF,255);
+  analogWrite(rightF,225);
+  }
+  else if(isOnBlack(IR1))
+  {
+  analogWrite(leftF,235);
+  analogWrite(rightF,255);
+  }
+  else if(isOnBlack(IR4) && isOnBlack(IR5))
+  {
+  analogWrite(leftF,255);
+  analogWrite(rightF,235);
+  }
+  else if( isOnBlack(IR1) && isOnBlack(IR2) && isOnBlack(IR3) && isOnBlack(IR4) && isOnBlack(IR5) && isOnBlack(IR6) && isOnBlack(IR7) && isOnBlack(IR8))
+  {
+  analogWrite(leftF,255);
+  analogWrite(rightF,255);
+  }
+  else 
+  {
+  analogWrite(leftF,255);
+  analogWrite(rightF,255);
+  }
+  
+  }
+  
+ 
+ 
+
+
+
+//bool squareDetected(){
+//  if(IR1 > 800 && IR2 > 800 && IR3 > 800 && IR4 > 800 && IR5 > 800 && IR6 > 800 && IR7 > 800 && IR8 > 800){
+//    return true;
+//      if(catchobject == 1){
+//      gripperdrop();
+//      catchobject=2;
+//    }
+//  }
+//}
+
+bool isOnBlack(int sensor)
+{
+
+if( sensor <= onblack && sensor > onWhite)
+return true;
+else
+return false;
+}
+
+
+bool isOnWhite(int sensor)
+{
+  if(sensor <= onWhite)
+  return true;
+  else
+  return false;
+}
+
+void setupMotors()
+{
+  pinMode(leftB, OUTPUT);
+  pinMode(leftF, OUTPUT);
+  pinMode(rightB, OUTPUT);
+  pinMode(rightF, OUTPUT); 
+  startTime=millis();
+  servo.attach(7);
+  servo.write(0);
+}
+
+void setupIRSensors()
+{
+ pinMode(A0, INPUT);
+ pinMode(A1, INPUT);
+ pinMode(A2, INPUT);
+ pinMode(A3, INPUT);
+ pinMode(A4, INPUT);
+ pinMode(A5, INPUT);
+ pinMode(A6, INPUT);
+ pinMode(A7, INPUT);
+}
+
+void readSensors()
+{
+  IR1 = analogRead(A0);
+  IR2 = analogRead(A1);
+  IR3 = analogRead(A2);
+  IR4 = analogRead(A4);
+  IR5 = analogRead(A3);
+  IR6 = analogRead(A5);
+  IR7 = analogRead(A6);
+  IR8 = analogRead(A7);
+}
+void setup()
+{
+  Serial.begin(9600); 
+  setupIRSensors();
+  setupMotors();
+}
+void loop()
+{
+ followLine();
+}
